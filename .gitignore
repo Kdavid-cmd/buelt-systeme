@@ -1,0 +1,7 @@
+.env
+node_modules/
+generated/
+logs/
+dist/
+database/calculs.json
+database/config.json

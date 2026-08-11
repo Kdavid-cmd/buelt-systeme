@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Système BUELT — La Poste Côte d'Ivoire</title>
+<link rel="icon" href="static/img/laposte-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<!-- ── Écran de connexion (code d'accès unique) ─────────────────────── -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <img src="static/img/laposte-logo.png" alt="La Poste CI" class="login-logo">
+    <h1>Système BUELT</h1>
+    <p class="login-sub">La Poste Côte d'Ivoire</p>
+    <form id="loginForm">
+      <input type="password" id="loginCode" placeholder="Code d'accès" autocomplete="off" required>
+      <button type="submit">Se connecter</button>
+      <div id="loginError" class="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Application (visible après connexion) ────────────────────────── -->
+<div id="app" class="app hidden">
+  <div class="app-frame">
+    <div class="app-row">
+
+      <!-- Sidebar desktop -->
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="static/img/laposte-logo.png" alt="La Poste CI">
+          <div class="brand-text">
+            <span class="brand-title">Système BUELT</span>
+            <span class="brand-sub">La Poste Côte d'Ivoire</span>
+          </div>
+        </div>
+        <nav id="sideNav" class="side-nav"></nav>
+        <div class="sidebar-footer">
+          <span>Usage interne — Agents La Poste</span>
+          <button id="logoutBtn" class="logout-link">Déconnexion</button>
+        </div>
+      </aside>
+
+      <!-- Colonne principale -->
+      <div class="main-col">
+        <header class="topbar">
+          <div>
+            <div id="pageTitle" class="page-title"></div>
+            <div id="pageSubtitle" class="page-subtitle"></div>
+          </div>
+          <div class="avatar">AG</div>
+        </header>
+
+        <main id="screenRoot" class="screen-root"></main>
+      </div>
+
+    </div>
+
+    <!-- Bottom nav mobile -->
+    <nav id="bottomNav" class="bottom-nav"></nav>
+
+    <!-- FAB Assistant -->
+    <button id="fabBtn" class="fab-btn" aria-label="Assistant IA">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1B17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4z"></path><path d="M8 9.5h8M8 12.5h5"></path></svg>
+    </button>
+    <div id="fabPanel" class="fab-panel hidden">
+      <div class="fab-title">Assistant IA</div>
+      <div id="fabMessages" class="fab-messages"></div>
+      <form id="fabForm" class="fab-composer">
+        <input id="fabInput" type="text" placeholder="Poser une question…" autocomplete="off">
+        <button type="submit" aria-label="Envoyer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Aperçu / impression du reçu (superposé, hors flux de l'app) ──── -->
+<div id="receiptOverlay" class="receipt-overlay hidden">
+  <div class="receipt-overlay-bar no-print">
+    <button id="receiptCloseBtn" type="button">← Retour</button>
+    <div class="receipt-overlay-actions">
+      <button id="receiptPrintBtn" type="button" class="btn-secondary">Imprimer</button>
+      <button id="receiptDownloadBtn" type="button" class="btn-primary">Télécharger le PDF</button>
+    </div>
+  </div>
+  <div id="receiptSheet" class="receipt-sheet"></div>
+</div>
+
+<script src="static/js/api.js"></script>
+<script src="static/js/receipt.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>
