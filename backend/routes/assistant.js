@@ -84,7 +84,7 @@ function answer(question) {
   // ── FAQ : formule de la surtaxe DHL ─────────────────────────────
   if (mentionsSurtaxe && mentionsFormule) {
     return {
-      text: "La surtaxe DHL se calcule ainsi : surtaxe = montant du jour DHL − tarif « coût La Poste » (grille interne par zone et poids), avec un minimum de 0. Le montant total facturé au client = tarif guichet + surtaxe. Le tarif guichet et le tarif « coût La Poste » dépendent tous les deux de la zone du pays et du poids facturable (le plus élevé entre poids réel et poids volumétrique).",
+      text: "La surtaxe DHL se calcule ainsi : surtaxe = montant du jour DHL − « tarif vendu à la poste » (grille interne par zone et poids), avec un minimum de 0. Le montant total facturé au client = tarif guichet + surtaxe. Le tarif guichet et le « tarif vendu à la poste » dépendent tous les deux de la zone du pays et du poids facturable (le plus élevé entre poids réel et poids volumétrique).",
       source: 'Formule de surtaxe — backend/services/surtaxeService.js (calculerSurtaxes)'
     };
   }

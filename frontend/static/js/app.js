@@ -510,7 +510,7 @@ function renderDhl() {
           <div class="panel-label">Tarif affiché</div>
           <div class="seg-group" style="margin-bottom:0;">
             <button class="seg-btn${s.tarif === 'guichet' ? ' active' : ''}" data-dhl-tarif="guichet">Tarif guichet</button>
-            <button class="seg-btn${s.tarif === 'poste' ? ' active' : ''}" data-dhl-tarif="poste">Coût La Poste</button>
+            <button class="seg-btn${s.tarif === 'poste' ? ' active' : ''}" data-dhl-tarif="poste">Tarif vendu à la poste</button>
           </div>
         </div>
       </div>
@@ -910,6 +910,30 @@ function renderFab() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
+// ── Déconnexion automatique après inactivité (5 min, aligné sur la session
+// glissante côté serveur — voir backend/services/sessionService.js) ────────
+const INACTIVITY_LIMIT_MS = 5 * 60 * 1000;
+let inactivityTimer = null;
+
+function resetInactivityTimer() {
+  if (!inactivityTimer) return; // pas connecté : rien à surveiller
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(async () => {
+    try { await API.logout(); } catch (err) { /* ignore */ }
+    showLogin('Session expirée après 5 minutes d\'inactivité, veuillez vous reconnecter.');
+  }, INACTIVITY_LIMIT_MS);
+}
+
+function startInactivityWatch() {
+  inactivityTimer = setTimeout(() => {}, 0); // marque "connecté" pour resetInactivityTimer
+  resetInactivityTimer();
+}
+
+function stopInactivityWatch() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+}
+
 // ══════════════════════════════════════════════════════════════════
 // AMORÇAGE APPLICATION
 // ══════════════════════════════════════════════════════════════════
@@ -919,10 +943,12 @@ async function bootApp() {
   } catch (err) { /* l'écran DHL affichera une liste vide si l'appel échoue */ }
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  startInactivityWatch();
   render();
 }
 
 function showLogin(message) {
+  stopInactivityWatch();
   document.getElementById('app').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('loginError').textContent = message || '';
@@ -954,6 +980,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fabInput').addEventListener('input', (e) => { state.fab.input = e.target.value; });
 
   window.addEventListener('buelt:unauthorized', () => showLogin('Session expirée, veuillez vous reconnecter.'));
+
+  // Réinitialise le minuteur d'inactivité à la moindre interaction (sans
+  // effet tant que personne n'est connecté — voir resetInactivityTimer).
+  ['click', 'keydown', 'mousemove', 'touchstart', 'input', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
 
   // Vérifie si une session est déjà active (rechargement de page)
   API.me().then(() => bootApp()).catch(() => showLogin(''));

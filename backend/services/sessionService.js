@@ -6,7 +6,11 @@
 const crypto = require('crypto');
 
 const COOKIE_NAME = 'buelt_session';
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12h
+// Session glissante : 5 min d'inactivité -> reconnexion obligatoire. Chaque
+// requête authentifiée (voir requireAuth) prolonge la session de 5 min, donc
+// un agent actif ne se fait jamais déconnecter ; seule une vraie inactivité
+// de 5 min ou plus invalide la session.
+const SESSION_TTL_MS = 5 * 60 * 1000; // 5 min
 
 function getSecret() {
   return process.env.SESSION_SECRET || process.env.ACCESS_CODE || 'buelt-dev-secret';
@@ -59,6 +63,9 @@ function requireAuth(req, res, next) {
   if (!session) {
     return res.status(401).json({ ok: false, error: 'Non authentifié' });
   }
+  // Session glissante : toute requête authentifiée repousse l'expiration de
+  // 5 min supplémentaires — seule une inactivité réelle de 5 min expire la session.
+  issueSessionCookie(res);
   next();
 }
 
