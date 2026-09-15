@@ -17,7 +17,9 @@ const FILES = {
 };
 
 function initDb() {
-  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+  } catch (err) {}
 
   if (!fs.existsSync(FILES.calculs)) {
     _write(FILES.calculs, { nextId: 1, rows: [] });
@@ -45,7 +47,11 @@ function _read(file) {
 }
 
 function _write(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+  try {
+    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    // Ignorer si système de fichiers en lecture seule (ex: Vercel)
+  }
 }
 
 // ── Config ────────────────────────────────────────────
