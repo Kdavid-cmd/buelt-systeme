@@ -10,7 +10,7 @@ const COOKIE_NAME = 'buelt_session';
 // requête authentifiée (voir requireAuth) prolonge la session de 5 min, donc
 // un agent actif ne se fait jamais déconnecter ; seule une vraie inactivité
 // de 5 min ou plus invalide la session.
-const SESSION_TTL_MS = 5 * 60 * 1000; // 5 min
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 heures (évite les décalages d'horloge Serverless)
 
 function getSecret() {
   return process.env.SESSION_SECRET || process.env.ACCESS_CODE || 'buelt-dev-secret';
@@ -43,18 +43,24 @@ function verify(token) {
   }
 }
 
-function issueSessionCookie(res) {
+function issueSessionCookie(req, res) {
+  // Support signature res seule ou (req, res)
+  if (!res && req && req.cookie) { res = req; req = null; }
+  const isHttps = req ? (req.secure || (req.headers && req.headers['x-forwarded-proto'] === 'https')) : false;
+  const isProd = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
+  
   const token = sign({ exp: Date.now() + SESSION_TTL_MS });
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.COOKIE_SECURE === 'true',
-    maxAge: SESSION_TTL_MS
+    secure: isProd || isHttps || process.env.COOKIE_SECURE === 'true',
+    maxAge: SESSION_TTL_MS,
+    path: '/'
   });
 }
 
 function clearSessionCookie(res) {
-  res.clearCookie(COOKIE_NAME);
+  res.clearCookie(COOKIE_NAME, { path: '/' });
 }
 
 function requireAuth(req, res, next) {
@@ -63,9 +69,7 @@ function requireAuth(req, res, next) {
   if (!session) {
     return res.status(401).json({ ok: false, error: 'Non authentifié' });
   }
-  // Session glissante : toute requête authentifiée repousse l'expiration de
-  // 5 min supplémentaires — seule une inactivité réelle de 5 min expire la session.
-  issueSessionCookie(res);
+  issueSessionCookie(req, res);
   next();
 }
 

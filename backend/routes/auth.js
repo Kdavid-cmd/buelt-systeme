@@ -36,7 +36,7 @@ router.post('/login', (req, res) => {
     const valide = verifierCode(code);
     if (valide) {
       logger.info('Connexion réussie');
-      issueSessionCookie(res);
+      issueSessionCookie(req, res);
       res.json({ ok: true });
     } else {
       logger.warn('Tentative de connexion échouée');
