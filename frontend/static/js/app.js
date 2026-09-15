@@ -962,7 +962,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await API.login(code);
       bootApp();
     } catch (err) {
-      showLogin('Code incorrect.');
+      console.error('Erreur connexion:', err);
+      showLogin(err.message || 'Code incorrect.');
     }
   });
 
