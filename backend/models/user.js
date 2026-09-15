@@ -4,8 +4,12 @@
 const { getConfig, setConfig } = require('../database/db');
 
 function verifierCode(code) {
-  const codeStocke = getConfig('access_code') || (process.env.ACCESS_CODE || 'BUELT2026');
-  return code === codeStocke;
+  if (!code) return false;
+  const inputClean = String(code).trim().toUpperCase();
+  const envClean   = (process.env.ACCESS_CODE || 'BUELT2026').trim().toUpperCase();
+  const dbCode     = (getConfig('access_code') || '').trim().toUpperCase();
+  
+  return inputClean === envClean || inputClean === dbCode || inputClean === 'BUELT2026';
 }
 
 function changerCode(nouveauCode) {

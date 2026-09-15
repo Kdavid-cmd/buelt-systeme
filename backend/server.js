@@ -60,9 +60,10 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: err.message || 'Erreur interne' });
 });
 
-// ── Démarrage ──────────────────────────────────
+// Initialisation de la DB (exécuté aussi bien en local qu'en serverless sur Vercel)
+initDb();
+
 function start() {
-  initDb();
   const host = process.env.HOST || '0.0.0.0';
   const server = app.listen(PORT, host, () => {
     logger.info(`Backend Express démarré sur http://${host}:${PORT}`);
