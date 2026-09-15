@@ -31,8 +31,14 @@ router.get('/countries', requireAuth, (req, res) => {
 // juste "accès interne valide" et donne accès à la même interface pour tous.
 router.post('/login', (req, res) => {
   try {
-    const { code } = req.body;
-    logger.info('POST /api/auth/login');
+    let code = req.body ? req.body.code : undefined;
+    if (!code && typeof req.body === 'string') {
+      try { code = JSON.parse(req.body).code; } catch {}
+    }
+    if (!code && req.query && req.query.code) {
+      code = req.query.code;
+    }
+    logger.info('POST /api/auth/login, code extrait:', code);
     const valide = verifierCode(code);
     if (valide) {
       logger.info('Connexion réussie');
