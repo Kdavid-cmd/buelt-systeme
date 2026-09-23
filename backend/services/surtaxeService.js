@@ -396,23 +396,32 @@ function trouverTarif(grille, poids, zone) {
   return tarifDeBase;
 }
 
+function parseNum(val) {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  const str = String(val).replace(',', '.').trim();
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
 function calculerPoidsVolumetrique(l, w, h) {
-  if (!l || !w || !h) return 0;
-  return (l * w * h) / 5000;
+  const L = parseNum(l), W = parseNum(w), H = parseNum(h);
+  if (!L || !W || !H) return 0;
+  return (L * W * H) / 5000;
 }
 
 function calculerSurtaxes(params) {
-  const poids_reel = parseFloat(params.poids_reel) || 0;
-  const longueur = parseFloat(params.longueur) || 0;
-  const largeur = parseFloat(params.largeur) || 0;
-  const hauteur = parseFloat(params.hauteur) || 0;
+  const poids_reel = parseNum(params.poids_reel);
+  const longueur = parseNum(params.longueur);
+  const largeur = parseNum(params.largeur);
+  const hauteur = parseNum(params.hauteur);
   let type_envoi = (params.type_envoi || 'DOCUMENT').toUpperCase();
   const dest_pays = params.dest_pays || 'France';
-  const montant_jour_dhl = parseFloat(params.montant_jour_dhl) || 0;
+  const montant_jour_dhl = parseNum(params.montant_jour_dhl);
 
   const zone = obtenirZone(dest_pays);
 
-  let poids_vol = parseFloat(params.poids_vol) || 0;
+  let poids_vol = parseNum(params.poids_vol);
   if (!poids_vol) {
     poids_vol = calculerPoidsVolumetrique(longueur, largeur, hauteur);
   }

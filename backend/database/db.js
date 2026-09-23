@@ -13,7 +13,8 @@ const DB_DIR = (global.APP_PATHS && global.APP_PATHS.DATABASE_DIR) || path.resol
 
 const FILES = {
   calculs: path.join(DB_DIR, 'calculs.json'),
-  config:  path.join(DB_DIR, 'config.json')
+  config:  path.join(DB_DIR, 'config.json'),
+  preRegistrations: path.join(DB_DIR, 'pre_registrations.json')
 };
 
 function initDb() {
@@ -23,6 +24,10 @@ function initDb() {
 
   if (!fs.existsSync(FILES.calculs)) {
     _write(FILES.calculs, { nextId: 1, rows: [] });
+  }
+
+  if (!fs.existsSync(FILES.preRegistrations)) {
+    _write(FILES.preRegistrations, { rows: [] });
   }
 
   if (!fs.existsSync(FILES.config)) {
@@ -247,6 +252,57 @@ async function countCalculs() {
   return (store.rows || []).length;
 }
 
+// ── Pre-Registrations CRUD ────────────────────────────
+
+async function insertPreRegistration(data) {
+  const code = data.code || `PRE-DHL-${Math.floor(100000 + Math.random() * 900000)}`;
+  const record = {
+    code,
+    status: 'PENDING',
+    created_at: new Date().toISOString(),
+    ...data
+  };
+
+  // 1. Sauvegarder en local
+  const store = _read(FILES.preRegistrations);
+  if (!store.rows) store.rows = [];
+  store.rows.unshift(record);
+  _write(FILES.preRegistrations, store);
+
+  // 2. Synchroniser dans Supabase (table pre_registrations si elle existe)
+  try {
+    const { error } = await supabase.from('pre_registrations').insert([record]);
+    if (error) console.warn('[Supabase PreReg Warn]', error.message);
+  } catch (err) {}
+
+  return record;
+}
+
+async function findPreRegistrationByCode(code) {
+  try {
+    const { data, error } = await supabase.from('pre_registrations').select('*').eq('code', code).single();
+    if (!error && data) return data;
+  } catch (err) {}
+
+  const store = _read(FILES.preRegistrations);
+  return (store.rows || []).find(r => r.code === code) || null;
+}
+
+async function updatePreRegistrationStatus(code, status) {
+  const store = _read(FILES.preRegistrations);
+  const item = (store.rows || []).find(r => r.code === code);
+  if (item) {
+    item.status = status;
+    item.updated_at = new Date().toISOString();
+    _write(FILES.preRegistrations, store);
+  }
+
+  try {
+    await supabase.from('pre_registrations').update({ status }).eq('code', code);
+  } catch (err) {}
+  return item;
+}
+
 module.exports = {
   initDb,
   getConfig,
@@ -257,5 +313,9 @@ module.exports = {
   listCalculs,
   findCalcul,
   deleteCalcul,
-  countCalculs
+  countCalculs,
+  insertPreRegistration,
+  findPreRegistrationByCode,
+  updatePreRegistrationStatus
 };
+

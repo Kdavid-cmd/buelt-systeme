@@ -34,15 +34,21 @@ app.use((req, _res, next) => {
   next();
 });
 
-// ── Santé (publique, avant l'authentification) ──
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+const clientRoutes = require('./routes/clientRoutes');
 
-// ── Authentification (login/logout publics, le reste du routeur est protégé plus bas) ──
+// ── Santé & Client Web (publics, avant l'authentification agent) ──
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+app.use('/api/client', clientRoutes);
+
+// Page web client autonome
+app.get('/client', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'client.html'));
+});
+
+// ── Authentification (login/logout publics) ──
 app.use('/api/auth', authRoutes);
 
 // ── Toutes les autres routes /api/* exigent une session valide ──
-// Un seul niveau d'accès : le cookie de session prouve juste "code d'accès
-// valide" (agent ou admin) — il n'y a plus de distinction de rôle côté produit.
 app.use('/api', requireAuth);
 app.use('/api/calculs', calculsRoutes);
 app.use('/api/pdf', pdfRoutes);

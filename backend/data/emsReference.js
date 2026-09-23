@@ -30,7 +30,7 @@ function obtenirZoneEms(pays) {
  */
 function trouverTrancheEms(zone, poids) {
   const info = EMS_ZONE_INFO[zone];
-  const w = parseFloat(poids);
+  const w = parseFloat(String(poids || 0).replace(',', '.'));
   if (!info || !w || w <= 0) return null;
 
   const maxBand = parseFloat(info.rates[info.rates.length - 1][0].split('-')[1].replace(',', '.'));

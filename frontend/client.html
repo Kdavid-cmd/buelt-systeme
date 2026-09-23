@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espace Client Express — La Poste Côte d'Ivoire</title>
+  <link rel="icon" href="static/img/laposte-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+  <style>
+    :root {
+      --laposte-green: #01604A;
+      --laposte-green-dark: #014A39;
+      --laposte-green-lite: #E7F0EC;
+      --laposte-yellow: #FEDB03;
+      --laposte-yellow-dark: #DDAF00;
+      --white: #FFFFFF;
+      --text-dark: #0E1B17;
+      --text-muted: #4B5F5A;
+      --border-color: #E2E8F0;
+    }
+
+    body.client-portal {
+      font-family: 'Public Sans', sans-serif;
+      background: linear-gradient(165deg, #014A39 0%, #01604A 50%, #013226 100%);
+      color: var(--text-dark);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER STICKY LA POSTE ── */
+    .client-header {
+      background: var(--laposte-green-dark);
+      border-bottom: 3px solid var(--laposte-yellow);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .client-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .client-brand img {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .client-brand-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--white);
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .client-brand-sub {
+      font-size: 0.8rem;
+      color: var(--laposte-yellow);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-express {
+      background: var(--laposte-yellow);
+      color: var(--laposte-green-dark);
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── CONTAINER PRINCIPAL ── */
+    .client-container {
+      max-width: 820px;
+      width: 92%;
+      margin: 24px auto 40px auto;
+      flex: 1;
+    }
+
+    .hero-banner {
+      text-align: center;
+      color: var(--white);
+      margin-bottom: 24px;
+    }
+
+    .hero-banner h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: var(--white);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .hero-banner p {
+      font-size: 1rem;
+      color: #D2E7DF;
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .hero-banner strong {
+      color: var(--laposte-yellow);
+    }
+
+    /* ── CARTE DE CONTENU ── */
+    .client-card {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      border: 2px solid rgba(254, 219, 3, 0.3);
+    }
+
+    /* ── PROGRESS BAR RESPONSIVE ── */
+    .step-progress {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .step-progress::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 10%;
+      right: 10%;
+      height: 3px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 2;
+      background: var(--white);
+      padding: 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #EDF2F7;
+      color: #718096;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .step-item.active .step-number {
+      background: var(--laposte-yellow);
+      color: var(--laposte-green-dark);
+      border-color: var(--laposte-green);
+      box-shadow: 0 0 0 4px rgba(254, 219, 3, 0.4);
+    }
+
+    .step-item.completed .step-number {
+      background: var(--laposte-green);
+      color: var(--white);
+    }
+
+    .step-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* ── TITRES DE FORMULAIRE ── */
+    .form-section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--laposte-green);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--laposte-green-lite);
+      padding-bottom: 8px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      color: var(--text-dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      background: var(--white);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--laposte-green);
+      box-shadow: 0 0 0 3px rgba(1, 96, 74, 0.15);
+    }
+
+    /* ── BANDEAU TARIF NET (LA POSTE COLORS) ── */
+    .price-banner {
+      background: linear-gradient(135deg, var(--laposte-green-dark) 0%, var(--laposte-green) 100%);
+      border-radius: 14px;
+      padding: 24px;
+      color: var(--white);
+      text-align: center;
+      margin: 24px 0;
+      box-shadow: 0 8px 24px rgba(1, 96, 74, 0.25);
+      border: 2px solid var(--laposte-yellow);
+    }
+
+    .price-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--laposte-yellow);
+      margin-bottom: 4px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+    }
+
+    .price-amount {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--white);
+      margin: 4px 0;
+    }
+
+    .price-sub {
+      font-size: 0.85rem;
+      color: #D2E7DF;
+    }
+
+    /* ── BOUTONS D'ACTION (JAUNE LA POSTE VIF) ── */
+    .btn-action {
+      background: var(--laposte-yellow);
+      color: var(--laposte-green-dark);
+      font-family: 'Sora', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(254, 219, 3, 0.4);
+    }
+
+    .btn-action:hover {
+      background: var(--laposte-yellow-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(254, 219, 3, 0.5);
+    }
+
+    .btn-secondary-client {
+      background: var(--laposte-green-lite);
+      color: var(--laposte-green);
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-secondary-client:hover {
+      background: #D5E5DE;
+    }
+
+    /* ── PASS QR CODE CARD ── */
+    .qr-card {
+      text-align: center;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      border: 2px solid var(--laposte-green);
+      margin-top: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+
+    .qr-code-box {
+      background: var(--white);
+      padding: 16px;
+      border-radius: 12px;
+      display: inline-block;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      margin: 16px 0;
+      border: 1px solid var(--border-color);
+    }
+
+    .booking-code {
+      font-family: 'Sora', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--laposte-green);
+      letter-spacing: 2px;
+      margin: 8px 0;
+      background: var(--laposte-green-lite);
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .client-footer {
+      text-align: center;
+      padding: 20px;
+      color: #A0C0B5;
+      font-size: 0.85rem;
+    }
+
+    /* ── MEDIA QUERIES RESPONSIVE (MOBILE & TABLETTE) ── */
+    @media (max-width: 768px) {
+      .client-header {
+        padding: 12px 16px;
+      }
+
+      .client-container {
+        width: 95%;
+        margin: 16px auto 30px auto;
+      }
+
+      .hero-banner h1 {
+        font-size: 1.6rem;
+      }
+
+      .hero-banner p {
+        font-size: 0.9rem;
+      }
+
+      .client-card {
+        padding: 20px 16px;
+        border-radius: 14px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .price-amount {
+        font-size: 2.2rem;
+      }
+
+      .step-progress {
+        margin-bottom: 24px;
+      }
+
+      .step-label {
+        font-size: 0.72rem;
+      }
+
+      .step-number {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+      }
+
+      .booking-code {
+        font-size: 1.4rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .client-brand-title {
+        font-size: 1rem;
+      }
+
+      .badge-express {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+      }
+
+      .btn-action {
+        font-size: 0.95rem;
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body class="client-portal">
+
+  <header class="client-header">
+    <div class="client-brand">
+      <img src="static/img/laposte-logo.png" alt="La Poste Côte d'Ivoire">
+      <div>
+        <div class="client-brand-title">La Poste Côte d'Ivoire</div>
+        <div class="client-brand-sub">Activités Express & DHL</div>
+      </div>
+    </div>
+    <span class="badge-express">Espace Client</span>
+  </header>
+
+  <div class="client-container">
+    <div class="hero-banner">
+      <h1>Estimez & Pré-enregistrez votre Envoi</h1>
+      <p>Calculez votre tarif net en quelques clics et obtenez votre <strong>Pass QR Code</strong> pour un dépôt prioritaire en guichet.</p>
+    </div>
+
+    <div class="client-card">
+      
+      <!-- Progress Steps -->
+      <div class="step-progress">
+        <div id="stepHeader1" class="step-item active">
+          <div class="step-number">1</div>
+          <div class="step-label">Simulation</div>
+        </div>
+        <div id="stepHeader2" class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-label">Expédition</div>
+        </div>
+        <div id="stepHeader3" class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-label">Pass QR Code</div>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 1 : SIMULATEUR TARIF -->
+      <div id="step1Content">
+        <div class="form-section-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          Caractéristiques du Colis / Document
+        </div>
+
+        <form id="simuForm">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="simuPays">Pays de destination *</label>
+              <select id="simuPays" class="form-control" required>
+                <option value="">Chargement des pays…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="simuType">Type d'envoi *</label>
+              <select id="simuType" class="form-control" required>
+                <option value="DOCUMENT">Document (jusqu'à 2 kg)</option>
+                <option value="COLIS">Colis / Marchandise</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="simuPoids">Poids estimé (kg) *</label>
+              <input type="number" id="simuPoids" class="form-control" step="0.1" min="0.1" value="0.5" required>
+            </div>
+            <div class="form-group">
+              <label for="simuValeur">Valeur déclarée (XOF)</label>
+              <input type="text" id="simuValeur" class="form-control" placeholder="Ex: 50 000 XOF">
+            </div>
+          </div>
+
+          <details style="margin-bottom: 20px;">
+            <summary style="cursor: pointer; font-weight: 700; color: var(--laposte-green); margin-bottom: 10px;">Dimensions optionnelles (pour grands colis)</summary>
+            <div class="grid-2" style="margin-top: 10px;">
+              <div class="form-group">
+                <label for="simuL">Longueur (cm)</label>
+                <input type="number" id="simuL" class="form-control" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label for="simuW">Largeur (cm)</label>
+                <input type="number" id="simuW" class="form-control" placeholder="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="simuH">Hauteur (cm)</label>
+              <input type="number" id="simuH" class="form-control" placeholder="0">
+            </div>
+          </details>
+
+          <!-- BANDEAU PRIX UNIQUE (CONFIDENTIALITÉ RESPECTÉE) -->
+          <div id="priceBanner" class="price-banner hidden">
+            <div class="price-title">Montant Total Net à Payer</div>
+            <div id="priceDisplay" class="price-amount">0 XOF</div>
+            <div class="price-sub">Tarif estimé du jour — Pesée finale de contrôle effectuée en guichet</div>
+          </div>
+
+          <button type="button" id="btnEstimer" class="btn-action">
+            Calculer le Tarif Net
+          </button>
+          <button type="button" id="btnGoToStep2" class="btn-action hidden" style="margin-top: 12px; background: var(--laposte-green-dark); color: var(--white);">
+            Continuer & Réserver (Pass QR Code) →
+          </button>
+        </form>
+      </div>
+
+      <!-- ÉTAPE 2 : FORMULAIRE D'EXPÉDITION -->
+      <div id="step2Content" class="hidden">
+        <div class="form-section-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Coordonnées Expéditeur (Côte d'Ivoire)
+        </div>
+
+        <form id="shippingForm">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="expNom">Nom & Prénom / Société *</label>
+              <input type="text" id="expNom" class="form-control" required placeholder="Ex: KONE Amadou">
+            </div>
+            <div class="form-group">
+              <label for="expTel">Téléphone Appel / WhatsApp *</label>
+              <input type="tel" id="expTel" class="form-control" required placeholder="Ex: 07 08 09 10 11">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="expEmail">Adresse E-mail</label>
+              <input type="email" id="expEmail" class="form-control" placeholder="Ex: amadou@gmail.com">
+            </div>
+            <div class="form-group">
+              <label for="expAdresse">Commune / Adresse *</label>
+              <input type="text" id="expAdresse" class="form-control" required placeholder="Ex: Cocody Angré 8ème Tranche">
+            </div>
+          </div>
+
+          <div class="form-section-title" style="margin-top: 24px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Coordonnées Destinataire (International)
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="destNom">Nom & Prénom Destinataire *</label>
+              <input type="text" id="destNom" class="form-control" required placeholder="Ex: Jean DUPONT">
+            </div>
+            <div class="form-group">
+              <label for="destTel">Téléphone Destinataire *</label>
+              <input type="tel" id="destTel" class="form-control" required placeholder="Ex: +33 6 12 34 56 78">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="destVille">Ville de destination *</label>
+              <input type="text" id="destVille" class="form-control" required placeholder="Ex: Paris / Milan / New York">
+            </div>
+            <div class="form-group">
+              <label for="destAdresse">Adresse complète destinataire *</label>
+              <input type="text" id="destAdresse" class="form-control" required placeholder="Ex: 15 Rue de la Paix, 75002">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="button" id="btnBackToStep1" class="btn-secondary-client">← Retour</button>
+            <button type="submit" class="btn-action" style="flex: 1;">Générer mon Pass QR Code</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ÉTAPE 3 : PASS QR CODE GENERATED -->
+      <div id="step3Content" class="hidden">
+        <div class="qr-card">
+          <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: var(--laposte-green); font-weight: 800;">Votre Pré-enregistrement est Validé !</div>
+          <div id="bookingCodeDisplay" class="booking-code">PRE-DHL-000000</div>
+
+          <div class="qr-code-box">
+            <div id="qrcodeCanvas"></div>
+          </div>
+
+          <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px;">
+            Montant Total Net à régler en guichet : <span id="finalPriceDisplay" style="color: var(--laposte-green); font-size: 1.3rem;">0 XOF</span>
+          </div>
+
+          <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 520px; margin: 12px auto; line-height: 1.4;">
+            Présentez ce <strong>Pass QR Code</strong> lors de votre passage dans n'importe quel guichet BUELT de La Poste Côte d'Ivoire. Vos informations seront importées instantanément.
+          </p>
+
+          <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
+            <button type="button" onclick="window.print()" class="btn-secondary-client">🖨️ Imprimer / Sauvegarder le Pass</button>
+            <button type="button" onclick="location.reload()" class="btn-action" style="width: auto; padding: 12px 24px;">Nouveau calcul</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="client-footer">
+    La Poste Côte d'Ivoire — Direction des Activités Express (BUELT & DHL Express). Tous droits réservés 2026.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="static/js/client.js"></script>
+</body>
+</html>

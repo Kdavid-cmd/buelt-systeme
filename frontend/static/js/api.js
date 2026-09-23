@@ -59,6 +59,9 @@ const API = {
   // ── DHL grilles ──
   dhlTarifs(type, tarif) { return this.get(`/api/dhl/tarifs?type=${type}&tarif=${tarif}`); },
 
+  // ── Pré-enregistrements Client ──
+  getPreRegistration(code) { return this.get(`/api/client/pre-register/${encodeURIComponent(code)}`); },
+
   // ── Assistant ──
   ask(question) { return this.post('/api/assistant/ask', { question }); }
 };

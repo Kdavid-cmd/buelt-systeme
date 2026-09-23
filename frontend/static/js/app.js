@@ -36,7 +36,8 @@ function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('fr-FR') + ' 
 // dupliquée ici uniquement pour un retour immédiat dans le champ "Vol" sans
 // attendre l'aller-retour réseau du calcul complet (qui exige pays + poids réel).
 function calcPoidsVolClient(l, w, h) {
-  const L = parseFloat(l), W = parseFloat(w), H = parseFloat(h);
+  const parseN = (val) => parseFloat(String(val || 0).replace(',', '.'));
+  const L = parseN(l), W = parseN(w), H = parseN(h);
   if (!L || !W || !H) return null;
   return Math.round((L * W * H / 5000) * 100) / 100;
 }
@@ -153,6 +154,7 @@ function renderRecu() {
   const flow = state.recu.flow;
   if (!flow) return renderRecuHub();
   if (flow === 'rapide') return renderRecuRapide();
+  if (flow === 'prereg') return renderRecuPrereg();
   if (flow === 'import') return renderRecuImport();
   if (flow === 'manuel') return renderRecuManuel();
 }
@@ -160,6 +162,7 @@ function renderRecu() {
 function renderRecuHub() {
   const cards = [
     { key: 'rapide', title: 'Calcul rapide', desc: 'Destinataire, colis et tarif DHL en un seul écran.' },
+    { key: 'prereg', title: '📥 Scanner Pré-enregistrement QR Code', desc: 'Importer les données saisies à distance par le client.' },
     { key: 'import', title: 'Importer un reçu DHL', desc: 'Déposez un reçu DHL (PDF/ZIP/RAR) et vérifiez les informations extraites.' },
     { key: 'manuel', title: 'Saisie manuelle', desc: 'Renseignez expéditeur, destinataire et envoi en détail.' }
   ];
@@ -171,6 +174,22 @@ function renderRecuHub() {
           <div class="module-desc">${c.desc}</div>
         </button>
       `).join('')}
+    </div>`;
+}
+
+function renderRecuPrereg() {
+  return h`
+    <button class="back-link" data-back-recu>← Reçu</button>
+    <div class="panel" style="max-width:550px; margin:20px auto; padding:24px;">
+      <div class="section-heading" style="margin-bottom:12px;">📥 Scanner ou Saisir le Code de Pré-enregistrement</div>
+      <div style="font-size:13px; color:var(--body-text); margin-bottom:16px; line-height:1.4;">
+        Scannez le Pass QR Code du client ou saisissez le code <strong>PRE-DHL-XXXXXX</strong> ci-dessous pour importer instantanément ses coordonnées et le tarif du jour.
+      </div>
+      <form id="preregSearchForm" style="display:flex; gap:10px;">
+        <input type="text" id="preregCodeInput" placeholder="Ex: PRE-DHL-891234" style="flex:1; padding:10px 14px; border:1.5px solid #CBD5E0; border-radius:8px; font-weight:bold; font-size:1.05rem;" required>
+        <button type="submit" class="btn-primary" style="padding:10px 20px;">Charger l'Envoi</button>
+      </form>
+      <div id="preregSearchStatus" style="margin-top:14px; font-size:13px;"></div>
     </div>`;
 }
 
@@ -725,6 +744,49 @@ function wireScreen() {
 
   // Import DHL
   wireImport();
+
+  // Recherche et import Pré-enregistrement (QR Code)
+  const preregForm = document.getElementById('preregSearchForm');
+  if (preregForm) {
+    preregForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const codeInput = document.getElementById('preregCodeInput');
+      const statusEl = document.getElementById('preregSearchStatus');
+      const code = (codeInput ? codeInput.value : '').trim();
+      if (!code) return;
+
+      statusEl.innerHTML = '<span style="color:#008751; font-weight:600;">Chargement du pré-enregistrement…</span>';
+      try {
+        const res = await API.getPreRegistration(code);
+        if (res.ok && res.preRegistration) {
+          const pr = res.preRegistration;
+          state.recu.manuel = {
+            ...state.recu.manuel,
+            waybill: pr.code,
+            exp_nom: pr.exp_nom || '',
+            exp_tel: pr.exp_tel || '',
+            exp_adresse: pr.exp_adresse || '',
+            dest_nom: pr.dest_nom || '',
+            dest_tel: pr.dest_tel || '',
+            dest_adresse: pr.dest_adresse || '',
+            dest_pays: pr.dest_pays || '',
+            nature: pr.type_envoi || 'DOCUMENT',
+            poids_reel: pr.poids_reel || '',
+            poids_vol: pr.poids_vol || '',
+            montant_jour_dhl: pr.montant_jour_dhl || '',
+            valeur_declaree: pr.valeur_declaree || '—'
+          };
+          state.recu.flow = 'manuel';
+          render();
+          runCalc('manuel');
+        } else {
+          statusEl.innerHTML = `<span style="color:#E53E3E;">Code introuvable pour "${esc(code)}". Vérifiez la saisie.</span>`;
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<span style="color:#E53E3E;">Erreur: ${esc(err.message)}</span>`;
+      }
+    });
+  }
 
   // EMS
   document.querySelectorAll('[data-ems-tab]').forEach(el => el.addEventListener('click', () => { state.ems.tab = el.dataset.emsTab; loadEmsTabData(); render(); }));
