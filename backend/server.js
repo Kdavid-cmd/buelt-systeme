@@ -51,6 +51,9 @@ app.use('/api/import', importRoutes);
 
 // ── Frontend statique ───────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
 
 // ── Gestion d'erreurs ──────────────────────────
 app.use((err, _req, res, _next) => {
