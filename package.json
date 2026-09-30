@@ -10,7 +10,6 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "server": "node backend/server.js",
-    "build": "echo Build OK",
     "build:electron": "electron-builder --win --x64",
     "build:portable": "electron-builder --win portable --x64"
   },
