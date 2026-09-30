@@ -35,7 +35,15 @@ app.use((req, _res, next) => {
 });
 
 // ── Santé (publique) ──
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+app.get('/api/health', (_req, res) => {
+  const supabase = require('./services/supabaseClient');
+  const configured = Boolean(process.env.SUPABASE_URL);
+  res.json({
+    status: 'ok',
+    ts: new Date().toISOString(),
+    supabase: supabase ? 'ok' : (configured ? 'invalid_url' : 'not_configured')
+  });
+});
 
 // ── Authentification (login/logout publics) ──
 app.use('/api/auth', authRoutes);

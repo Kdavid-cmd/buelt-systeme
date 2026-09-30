@@ -11,8 +11,13 @@ if (typeof WebSocket === 'undefined') {
   global.WebSocket = require('ws');
 }
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+// Nettoie les valeurs collées dans le dashboard Vercel (espaces, guillemets).
+function clean(v) {
+  return (v || '').trim().replace(/^['"]|['"]$/g, '').trim();
+}
+
+const supabaseUrl = clean(process.env.SUPABASE_URL);
+const supabaseKey = clean(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
 
 // Supabase est optionnel : sans URL/clé (déploiement sans Supabase), on
 // n'appelle pas createClient (qui lève une erreur bloquante si l'URL est
@@ -25,12 +30,18 @@ let supabase = null;
 if (!supabaseUrl || !supabaseKey) {
   console.warn('⚠️ Avertissement : SUPABASE_URL ou les clés sont manquantes — fonctionnement en JSON local uniquement.');
 } else {
-  supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
+  // Une URL invalide ferait planter tout le serveur au chargement
+  // (FUNCTION_INVOCATION_FAILED sur Vercel) : on bascule en JSON local.
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+  } catch (err) {
+    console.error('❌ Supabase non initialisé (vérifiez SUPABASE_URL) :', err.message);
+  }
 }
 
 module.exports = supabase;
