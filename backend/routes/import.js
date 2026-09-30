@@ -14,7 +14,12 @@ const fs = require('fs');
 const os = require('os');
 const multer = require('multer');
 const AdmZip = require('adm-zip');
-const { createExtractorFromFile } = require('node-unrar-js');
+let createExtractorFromFile;
+try {
+  createExtractorFromFile = require('node-unrar-js').createExtractorFromFile;
+} catch (err) {
+  console.warn('[Import Route] node-unrar-js non disponible en mode serverless:', err.message);
+}
 const { parseDhlReceipt } = require('../services/pdfParserService');
 const logger = require('../services/loggerService');
 
