@@ -89,9 +89,14 @@ async function fetchDhlLiveRate(params) {
 
       if (response.ok) {
         const data = await response.json();
-        const product = data.products && data.products[0];
-        if (product && product.totalPrice && product.totalPrice.length > 0) {
-          const totalPriceObj = product.totalPrice[0];
+        // DHL renvoie plusieurs produits (EXPRESS 12:00, EXPRESS EASY...) : on retient
+        // EXPRESS WORLDWIDE (D = document, P = colis), le service standard du guichet.
+        const products = data.products || [];
+        const wanted = params.isDoc ? ['D', 'P'] : ['P', 'D'];
+        const product = wanted.map(c => products.find(p => p.productCode === c)).find(Boolean) || products[0];
+        // BILLC = montant facturé au compte (en XOF), BASEC = devise de base DHL (EUR)
+        const totalPriceObj = product && (product.totalPrice || []).find(t => t.currencyType === 'BILLC');
+        if (totalPriceObj) {
           const montantTotalXOF = totalPriceObj.price;
 
           // Extraire la décomposition des prix si disponible
@@ -102,16 +107,15 @@ async function fetchDhlLiveRate(params) {
             elevatedRiskSurcharge: 0
           };
 
-          if (totalPriceObj.priceBreakdown) {
-            totalPriceObj.priceBreakdown.forEach(item => {
-              if (item.typeCode === 'STC') breakdown.baseRate = item.price;
-              if (item.typeCode === 'FF') breakdown.fuelSurcharge = item.price;
-              if (item.typeCode === 'REM') breakdown.remoteAreaSurcharge = item.price;
-              if (item.typeCode === 'SD' || item.typeCode === 'EE') breakdown.elevatedRiskSurcharge = item.price;
-            });
-          }
+          const detail = (product.detailedPriceBreakdown || []).find(b => b.currencyType === 'BILLC');
+          (detail?.breakdown || []).forEach(item => {
+            if (!item.serviceCode) breakdown.baseRate += item.price; // ligne produit (tarif de base)
+            else if (item.serviceCode === 'FF') breakdown.fuelSurcharge += item.price;
+            else if (['OO', 'OB'].includes(item.serviceCode)) breakdown.remoteAreaSurcharge += item.price;
+            else if (['CR', 'CA'].includes(item.serviceCode)) breakdown.elevatedRiskSurcharge += item.price;
+          });
 
-          logger.info(`Réponse API DHL obtenue avec succès : ${montantTotalXOF} XOF`);
+          logger.info(`Réponse API DHL obtenue avec succès : ${product.productName} ${montantTotalXOF} XOF`);
           return {
             montant_jour_dhl: Math.round(montantTotalXOF),
             breakdown,
