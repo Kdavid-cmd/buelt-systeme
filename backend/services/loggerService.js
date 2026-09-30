@@ -5,13 +5,31 @@
 const path = require('path');
 const fs = require('fs');
 
-const LOGS_DIR = (global.APP_PATHS && global.APP_PATHS.LOGS_DIR) || path.resolve(path.join(__dirname, '..', '..', 'logs'));
-if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+const isVercel = !!(process.env.VERCEL || process.env.NOW_BUILDER);
+const LOGS_DIR = isVercel
+  ? '/tmp'
+  : ((global.APP_PATHS && global.APP_PATHS.LOGS_DIR) || path.resolve(path.join(__dirname, '..', '..', 'logs')));
 
 let logger;
 
 try {
   const winston = require('winston');
+  const transports = [new winston.transports.Console()];
+
+  if (!isVercel) {
+    try {
+      if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+      transports.push(new winston.transports.File({
+        filename: path.join(LOGS_DIR, 'app.log'),
+        maxsize: 5 * 1024 * 1024, // 5 MB
+        maxFiles: 3,
+        tailable: true
+      }));
+    } catch (fsErr) {
+      console.warn('[Logger] File logging disabled:', fsErr.message);
+    }
+  }
+
   logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     format: winston.format.combine(
@@ -19,15 +37,7 @@ try {
       winston.format.printf(({ timestamp, level, message }) =>
         `[${timestamp}] ${level.toUpperCase()}: ${message}`)
     ),
-    transports: [
-      new winston.transports.Console(),
-      new winston.transports.File({
-        filename: path.join(LOGS_DIR, 'app.log'),
-        maxsize: 5 * 1024 * 1024, // 5 MB
-        maxFiles: 3,
-        tailable: true
-      })
-    ]
+    transports
   });
 } catch {
   // Fallback si winston non disponible
@@ -39,3 +49,4 @@ try {
 }
 
 module.exports = logger;
+

@@ -67,7 +67,16 @@ function _write(file, data) {
 // ── Config ────────────────────────────────────────────
 function getConfig(cle) {
   const cfg = _read(FILES.config);
-  return cfg[cle] !== undefined ? String(cfg[cle]) : null;
+  if (cfg && cfg[cle] !== undefined && cfg[cle] !== null) {
+    return String(cfg[cle]);
+  }
+  // Fallbacks si le fichier JSON local /tmp/config.json n'existe pas encore (Vercel)
+  if (cle === 'access_code') return process.env.ACCESS_CODE || 'BUELT2026';
+  if (cle === 'taux_carburant') return '24';
+  if (cle === 'taux_urgence') return '55';
+  if (cle === 'taux_zone_eloignee') return '80';
+  if (cle === 'taux_livraison_sam') return '35';
+  return null;
 }
 
 function setConfig(cle, valeur) {

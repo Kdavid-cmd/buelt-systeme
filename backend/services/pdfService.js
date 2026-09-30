@@ -7,8 +7,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Dossier de sortie
-const GENERATED_DIR = (global.APP_PATHS && global.APP_PATHS.GENERATED_DIR) || path.resolve(path.join(__dirname, '..', '..', 'generated'));
-if (!fs.existsSync(GENERATED_DIR)) fs.mkdirSync(GENERATED_DIR, { recursive: true });
+const isVercel = !!(process.env.VERCEL || process.env.NOW_BUILDER);
+const GENERATED_DIR = isVercel
+  ? '/tmp'
+  : ((global.APP_PATHS && global.APP_PATHS.GENERATED_DIR) || path.resolve(path.join(__dirname, '..', '..', 'generated')));
+
+try {
+  if (!fs.existsSync(GENERATED_DIR)) fs.mkdirSync(GENERATED_DIR, { recursive: true });
+} catch (err) {
+  console.warn('[PDF Service] FS non accessible:', err.message);
+}
 
 /**
  * Formater un montant en FCFA

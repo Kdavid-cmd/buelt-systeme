@@ -19,7 +19,11 @@ const { parseDhlReceipt } = require('../services/pdfParserService');
 const logger = require('../services/loggerService');
 
 const UPLOAD_DIR = path.join(os.tmpdir(), 'buelt-uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch (err) {
+  console.warn('[Import Route] Impossible de créer UPLOAD_DIR:', err.message);
+}
 
 const upload = multer({
   storage: multer.diskStorage({
