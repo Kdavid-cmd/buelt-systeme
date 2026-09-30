@@ -154,7 +154,6 @@ function renderRecu() {
   const flow = state.recu.flow;
   if (!flow) return renderRecuHub();
   if (flow === 'rapide') return renderRecuRapide();
-  if (flow === 'prereg') return renderRecuPrereg();
   if (flow === 'import') return renderRecuImport();
   if (flow === 'manuel') return renderRecuManuel();
 }
@@ -162,7 +161,6 @@ function renderRecu() {
 function renderRecuHub() {
   const cards = [
     { key: 'rapide', title: 'Calcul rapide', desc: 'Destinataire, colis et tarif DHL en un seul écran.' },
-    { key: 'prereg', title: '📥 Scanner Pré-enregistrement QR Code', desc: 'Importer les données saisies à distance par le client.' },
     { key: 'import', title: 'Importer un reçu DHL', desc: 'Déposez un reçu DHL (PDF/ZIP/RAR) et vérifiez les informations extraites.' },
     { key: 'manuel', title: 'Saisie manuelle', desc: 'Renseignez expéditeur, destinataire et envoi en détail.' }
   ];

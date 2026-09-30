@@ -34,16 +34,8 @@ app.use((req, _res, next) => {
   next();
 });
 
-const clientRoutes = require('./routes/clientRoutes');
-
-// ── Santé & Client Web (publics, avant l'authentification agent) ──
+// ── Santé (publique) ──
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
-app.use('/api/client', clientRoutes);
-
-// Page web client autonome
-app.get('/client', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'client.html'));
-});
 
 // ── Authentification (login/logout publics) ──
 app.use('/api/auth', authRoutes);
