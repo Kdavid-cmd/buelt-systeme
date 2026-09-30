@@ -9,7 +9,10 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const supabase = require('../services/supabaseClient');
 
-const DB_DIR = (global.APP_PATHS && global.APP_PATHS.DATABASE_DIR) || path.resolve(path.join(__dirname, '..', '..', 'database'));
+const isVercel = !!(process.env.VERCEL || process.env.NOW_BUILDER);
+const DB_DIR = isVercel 
+  ? '/tmp' 
+  : ((global.APP_PATHS && global.APP_PATHS.DATABASE_DIR) || path.resolve(path.join(__dirname, '..', '..', 'database')));
 
 const FILES = {
   calculs: path.join(DB_DIR, 'calculs.json'),
@@ -20,27 +23,29 @@ const FILES = {
 function initDb() {
   try {
     if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
-  } catch (err) {}
 
-  if (!fs.existsSync(FILES.calculs)) {
-    _write(FILES.calculs, { nextId: 1, rows: [] });
+    if (!fs.existsSync(FILES.calculs)) {
+      _write(FILES.calculs, { nextId: 1, rows: [] });
+    }
+
+    if (!fs.existsSync(FILES.preRegistrations)) {
+      _write(FILES.preRegistrations, { rows: [] });
+    }
+
+    if (!fs.existsSync(FILES.config)) {
+      _write(FILES.config, {
+        access_code:       process.env.ACCESS_CODE || 'BUELT2026',
+        taux_carburant:    '24',
+        taux_urgence:      '55',
+        taux_zone_eloignee:'80',
+        taux_livraison_sam:'35'
+      });
+    }
+
+    console.log(`[DB Hybride] Initialisé (Supabase Cloud + Secours JSON local : ${DB_DIR})`);
+  } catch (err) {
+    console.warn('[DB Hybride] Mode Serverless actif ou restreint, Supabase Cloud en mode primaire.');
   }
-
-  if (!fs.existsSync(FILES.preRegistrations)) {
-    _write(FILES.preRegistrations, { rows: [] });
-  }
-
-  if (!fs.existsSync(FILES.config)) {
-    _write(FILES.config, {
-      access_code:       process.env.ACCESS_CODE || 'BUELT2026',
-      taux_carburant:    '24',
-      taux_urgence:      '55',
-      taux_zone_eloignee:'80',
-      taux_livraison_sam:'35'
-    });
-  }
-
-  console.log(`[DB Hybride] Initialisé (Supabase Cloud + Secours JSON local : ${DB_DIR})`);
 }
 
 function _read(file) {
