@@ -1,5 +1,6 @@
 const fs = require('fs');
-const { PDFParse } = require('pdf-parse');
+// pdf-parse (pdfjs + canvas natif) est chargé à la demande : chargé au démarrage,
+// il fait planter tout le serveur sur Vercel (DOMMatrix is not defined).
 
 /**
  * Extrait les informations clés d'un reçu DHL au format PDF.
@@ -8,6 +9,7 @@ const { PDFParse } = require('pdf-parse');
  */
 async function parseDhlReceipt(filePath) {
   try {
+    const { PDFParse } = require('pdf-parse');
     const dataBuffer = fs.readFileSync(filePath);
     const parser = new PDFParse({ data: dataBuffer });
     const data = await parser.getText();
